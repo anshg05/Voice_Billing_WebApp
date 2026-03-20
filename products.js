@@ -8,14 +8,14 @@ const PRODUCTS = [
   // ══════════════════════════════════
   // ATTA / GRAINS / FLOUR
   // ══════════════════════════════════
-  { id:1,   names:["aata","atta","wheat flour","gehu atta","gehun","gehu","wheat","आटा","गेहूं","गेहुं","गेहू"], displayName:"Aata", unit:"kg", price:32 },
-  { id:2,   names:["chakki aata","chakki fresh","chakki ka aata","fresh aata","पिसा आटा","चक्की आटा"], displayName:"Chakki Aata", unit:"kg", price:38 },
-  { id:3,   names:["maida","refined flour","all purpose flour","मैदा","मेदा"], displayName:"Maida", unit:"kg", price:35 },
-  { id:4,   names:["besan","gram flour","chana flour","chickpea flour","बेसन","चने का आटा"], displayName:"Besan", unit:"kg", price:60 },
+  { id:1,   names:["gehun","gehu","wheat","आटा","गेहूं","गेहुं","गेहू"], displayName:"गेहूं", unit:"kg", price:32 },
+  { id:2,   names:["chakki aata","chakki fresh","chakki ka aata","fresh aata","पिसा आटा","चक्की आटा","aata","atta","wheat flour","gehu atta"], displayName:"Chakki Aata", unit:"kg", price:38 },
+  { id:3,   names:["maida","refined flour","all purpose flour","मैदा","मेदा"], displayName:"Maida", unit:"kg", price:42 },
+  { id:4,   names:["besan","gram flour","chana flour","chickpea flour","बेसन","चने का आटा"], displayName:"Besan", unit:"kg", price:90 },
   { id:5,   names:["suji","sooji","rava","semolina","ravva","रवा","सूजी"], displayName:"Suji", unit:"kg", price:40 },
   { id:6,   names:["makki atta","corn flour","makka atta","cornflour","maize flour","मक्का आटा","मक्की आटा"], displayName:"Makki Atta", unit:"kg", price:30 },
-  { id:7,   names:["bajra","bajra flour","pearl millet","बाजरा","बाजरे का आटा"], displayName:"Bajra Atta", unit:"kg", price:28 },
-  { id:8,   names:["jowar","jowar atta","sorghum","ज्वार","ज्वार का आटा"], displayName:"Jowar Atta", unit:"kg", price:28 },
+  { id:7,   names:["bajra","bajra flour","pearl millet","बाजरा","बाजरे का आटा","bajara"], displayName:"Bajra Atta", unit:"kg", price:28 },
+  { id:8,   names:["jowar","jowar atta","sorghum","ज्वार","ज्वार का आटा","jawar"], displayName:"Jowar Atta", unit:"kg", price:28 },
   { id:9,   names:["ragi","ragi flour","finger millet","nachni","रागी","नाचनी"], displayName:"Ragi Atta", unit:"kg", price:55 },
   { id:10,  names:["sattu","roasted gram flour","सत्तु","सत्तू"], displayName:"Sattu", unit:"kg", price:70 },
 
@@ -31,15 +31,15 @@ const PRODUCTS = [
   // ══════════════════════════════════
   // DALS / PULSES / LEGUMES
   // ══════════════════════════════════
-  { id:16,  names:["daal","dal","dhal","lentils","दाल"], displayName:"Daal Mix", unit:"kg", price:90 },
+  { id:16,  names:["daal","dal","dhal","lentils","दाल"], displayName:" Toor Daal", unit:"kg", price:90 },
   { id:17,  names:["arhar daal","tur daal","tuvar dal","toor dal","pigeon pea","अरहर दाल","तुअर दाल","तूर दाल"], displayName:"Arhar Daal", unit:"kg", price:140 },
   { id:18,  names:["moong daal","moong dal","green moong","split green gram","मूंग दाल","मूंग की दाल"], displayName:"Moong Daal", unit:"kg", price:110 },
   { id:19,  names:["masoor daal","masoor dal","red lentil","pink lentil","मसूर दाल","मसूर की दाल"], displayName:"Masoor Daal", unit:"kg", price:90 },
-  { id:20,  names:["urad daal","urad dal","black gram","white lentil","उड़द दाल","उरद दाल"], displayName:"Urad Daal", unit:"kg", price:120 },
+  { id:20,  names:["urad daal","urad dal","black gram","white lentil","उड़द दाल","उरद दाल","udad daal"], displayName:"Urad Daal", unit:"kg", price:100 },
   { id:21,  names:["chana daal","chana dal","split chickpea","bengal gram","चना दाल","चने की दाल"], displayName:"Chana Daal", unit:"kg", price:80 },
   { id:22,  names:["rajma","kidney beans","red beans","राजमा","राजमाह"], displayName:"Rajma", unit:"kg", price:120 },
   { id:23,  names:["chhole","kabuli chana","chole","chickpea","white chana","छोले","काबुली चना","चने"], displayName:"Kabuli Chana", unit:"kg", price:100 },
-  { id:24,  names:["kala chana","black chana","desi chana","brown chickpea","काला चना","देसी चना"], displayName:"Kala Chana", unit:"kg", price:80 },
+  { id:24,  names:["kala chana","black chana","desi chana","brown chickpea","काला चना","देसी चना","chana","चना"], displayName:"Kala Chana", unit:"kg", price:80 },
   { id:25,  names:["lobiya","black eyed peas","cow pea","लोबिया"], displayName:"Lobiya", unit:"kg", price:85 },
   { id:26,  names:["matki","moth beans","turkish gram","मटकी","मोठ"], displayName:"Matki", unit:"kg", price:90 },
 
@@ -154,7 +154,7 @@ const PRODUCTS = [
   { id:101, names:["mirchi powder","red chilli powder","pisi lal mirch","पिसी मिर्च","मिर्च पाउडर"], displayName:"Mirchi Powder", unit:"kg", price:220 },
   { id:102, names:["haldi","turmeric","haldi powder","हल्दी","पीली मिर्च","हल्दी पाउडर"], displayName:"Haldi", unit:"kg", price:180 },
   { id:103, names:["dhaniya","coriander","coriander powder","dhania","dhaniya powder","धनिया","धनिया पाउडर"], displayName:"Dhaniya Powder", unit:"kg", price:120 },
-  { id:104, names:["jeera","cumin","cumin seeds","साबुत जीरा","जीरा","जीरे"], displayName:"Jeera", unit:"kg", price:400 },
+  { id:104, names:["jeera","jira","jheera","cumin","cumin seeds","sabut jeera","साबुत जीरा","जीरा","जीरे","jara","जरा","जारा","ज़ारा"], displayName:"Jeera", unit:"kg", price:400 },
   { id:105, names:["garam masala","garammasala","mixed spices","masala","गरम मसाला","मसाला"], displayName:"Garam Masala", unit:"piece", price:30 },
   { id:106, names:["chole masala","chana masala","छोले मसाला","चना मसाला"], displayName:"Chole Masala", unit:"piece", price:25 },
   { id:107, names:["sabzi masala","subzi masala","vegetable masala","सब्जी मसाला","वेजिटेबल मसाला"], displayName:"Sabzi Masala", unit:"piece", price:25 },
@@ -169,7 +169,7 @@ const PRODUCTS = [
   { id:116, names:["kali mirch","black pepper","pepper","काली मिर्च","काली मरिच"], displayName:"Kali Mirch", unit:"gm", price:1 },
   { id:117, names:["ajwain","carom seeds","bishop's weed","अजवाइन","अजवायन"], displayName:"Ajwain", unit:"gm", price:0.5 },
   { id:118, names:["methi dana","fenugreek seeds","methi","मेथी दाना","मेथी"], displayName:"Methi Dana", unit:"gm", price:0.4 },
-  { id:119, names:["saunf","fennel","fennel seeds","variyali","सौंफ","बड़ी सौंफ"], displayName:"Saunf", unit:"gm", price:0.4 },
+  { id:119, names:["saunf","saof","sauf","souf","souff","sof","fennel","fennel seeds","variyali","सौंफ","बड़ी सौंफ"], displayName:"Saunf", unit:"gm", price:0.4 },
   { id:120, names:["kalonji","nigella","black cumin","कलौंजी","कलोंजी"], displayName:"Kalonji", unit:"gm", price:0.6 },
   { id:121, names:["amchur","dry mango powder","amchoor","अमचूर","खट्टा पाउडर"], displayName:"Amchur", unit:"gm", price:0.8 },
   { id:122, names:["chaat masala","chat masala","snack masala","चाट मसाला"], displayName:"Chaat Masala", unit:"piece", price:25 },
@@ -660,10 +660,20 @@ PRODUCTS.push(
   { id:609, names:["Futana","फ़ुटाना","फ़ुटना","Futna"], displayName:"फ़ुटाना", unit:"kg", price:90 },
   { id:610, names:["Bhagar","Bagar","Bagat","भगड़","बगड़","भगर"], displayName:"Bhagar", unit:"kg", price:130 },
   { id:611, names:["Gulab jamun","गुलाब जामुन","गुलाब जामुन पैकेट"], displayName:"गुलाब जामुन पैकेट", unit:"kg", price:370},
-  { id:612, names:["Jeera","Jara","जीरा", "जरा"], displayName:"जीरा", unit:"kg", price:320},
+  { id:612, names:["jira powder","jeera powder","cumin powder","जीरा पाउडर","जिरा पाउडर"], displayName:"Jeera Powder", unit:"kg", price:320},
   { id:613, names:["Daaliya","Daliya","दलिया","डालिया","दालिया"], displayName:"दालिया", unit:"kg", price:320},
   { id:614, names:["Fena sabun","Tanman sabun","Fena","Tanman","Surfexcel sabun","Wheel sabun","फेना","तनमन", "सर्फ एक्सेल साबुन", "व्हील साबुन"], displayName:"Sabun", unit:"piece", price:10},
   { id:615, names:["Vim set","Vim bundle","Nip bundle", "Nip Set","Vim","Nip"], displayName:"Bartan bar", unit:"piece", price:35},
+  { id:616, names:["Dhoop","Incense sticks","Agarbatti","धूप","अगरबत्ती"], displayName:"Agarbatti", unit:"piece", price:50 },
+  { id:617, names:["Sandalwood","Chandan","चंदन"], displayName:"Chandan (Sandalwood)", unit:"piece", price:50 },
+  { id:618, names:["Kesar","Saffron","केसर"], displayName:"Kesar (Saffron)", unit:"gm", price:500 },
+  { id:619, names:["Mogra","Jasmine","मोगरा"], displayName:"Mogra (Jasmine)", unit:"piece", price:20 },
+  { id:620, names:["Kanki","Kanaki","कनकी","कांकी"], displayName:"कनकी", unit:"Kg", price:36 },
+  { id:621, names:["khada dhaniya","kada dhaniya","खड़ा धनिया","खडी धनिया"], displayName:"Khada Dhaniya", unit:"kg", price:140 },
+  { id:622,  names:["dhuli moong daal","dhuli moong","duli moong","duli moong daal","moong mogar","moong magar","moong moghar","धुली मूंग दाल","धुली मूंग की दाल","मूंग मोगर","मूंग मगर"], displayName:"Moong Daal", unit:"kg", price:110 },
+  { id:623,  names:["khadi masoor daal","khadi masoor","खड़ा मसूर दाल","खड़ा मसूर","खडी मसूर", "खडी मसूर दाल" ], displayName:"Masoor Daal", unit:"kg", price:90 },
+  { id:624,  names:["dhuli urad daal","dhuli urad","duli urad","duli urad daal","dhuli udad daal","duli udad daal","urad mogar","udad mogar","urad magar","udad magar","urad moghar","धुली उड़द दाल","धुली उरद दाल","उड़द मोगर","उड़द मगर","उरद मोगर", "उरद मगर"], displayName:"Urad Mogar", unit:"kg", price:120 },
+  { id:625,  names:["khadi moong daal","khadi moong","खड़ा मूंग दाल","खड़ा मूंग ","खडी मूंग", "खडी मूंग दाल" ], displayName:"Moong", unit:"kg", price:92 },
 );
 
 

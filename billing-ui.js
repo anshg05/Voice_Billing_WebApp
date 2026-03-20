@@ -1,9 +1,15 @@
 function addItem(item) {
   var rate = item.rate !== undefined ? item.rate : (item.price !== undefined ? item.price : null);
   var total = item.total !== undefined && item.total !== null ? item.total : (rate !== null ? item.qty * rate : 0);
+  var incomingItem = {
+    displayName: item.displayName,
+    unit: item.unit || "piece",
+    rate: rate,
+    total: total
+  };
 
   var existing = billItems.find(function(existingItem) {
-    return existingItem.displayName.toLowerCase() === item.displayName.toLowerCase();
+    return shouldMergeBillItems(existingItem, incomingItem);
   });
 
   if (existing) {
@@ -25,6 +31,41 @@ function addItem(item) {
     total: total,
     isCustom: item.isCustom || false
   });
+}
+
+function normalizeMoneyValue(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  var numberValue = Number(value);
+  return isNaN(numberValue) ? null : +numberValue.toFixed(2);
+}
+
+function shouldMergeBillItems(existingItem, incomingItem) {
+  if (!existingItem || !incomingItem) {
+    return false;
+  }
+
+  var sameName = String(existingItem.displayName || "").trim().toLowerCase() === String(incomingItem.displayName || "").trim().toLowerCase();
+  var sameUnit = String(existingItem.unit || "").trim().toLowerCase() === String(incomingItem.unit || "").trim().toLowerCase();
+  if (!sameName || !sameUnit) {
+    return false;
+  }
+
+  var existingRate = normalizeMoneyValue(existingItem.rate);
+  var incomingRate = normalizeMoneyValue(incomingItem.rate);
+  if (existingRate !== incomingRate) {
+    return false;
+  }
+
+  if (existingRate !== null) {
+    return true;
+  }
+
+  var existingTotal = normalizeMoneyValue(existingItem.total);
+  var incomingTotal = normalizeMoneyValue(incomingItem.total);
+  return existingTotal === incomingTotal;
 }
 
 function removeItem(id) {
@@ -569,33 +610,75 @@ async function shareWhatsApp() {
   try {
     showToast("Preparing...", "info");
     var canvas = await renderOffscreen(buildBillHTML());
+    await shareCanvasOnWhatsApp(canvas, buildWhatsAppText());
+  } catch (error) {
+    console.error(error);
+    showToast("Share failed", "err");
+  }
+}
 
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function buildWhatsAppText(itemsOverride, totalOverride, customerOverride, timestampOverride) {
+  var items = itemsOverride || billItems;
+  var total = totalOverride !== undefined ? totalOverride : getTotal();
+  var customer = customerOverride || "";
+  var dateText = timestampOverride
+    ? new Date(timestampOverride).toLocaleDateString("en-IN")
+    : new Date().toLocaleDateString("en-IN");
+  var message = "*" + shopName + "*\n";
+
+  if (shopPhone) {
+    message += "\uD83D\uDCDE " + shopPhone + "\n";
+  }
+  if (customer) {
+    message += "\uD83D\uDC64 " + customer + "\n";
+  }
+
+  message += "\uD83D\uDCC5 " + dateText + "\n" + "\u2500".repeat(22) + "\n";
+  items.forEach(function(item) {
+    message += item.displayName + "  " + item.qty + item.unit + "  \u20B9" + item.total.toFixed(0) + "\n";
+  });
+  message += "\u2500".repeat(22) + "\n*Total: \u20B9" + total.toFixed(0) + "*\n_\u0927\u0928\u094D\u092F\u0935\u093E\u0926 \uD83D\uDE4F_";
+
+  return message;
+}
+
+function shareCanvasOnWhatsApp(canvas, message) {
+  return new Promise(function(resolve, reject) {
     canvas.toBlob(async function(blob) {
+      if (!blob) {
+        reject(new Error("Could not create image blob"));
+        return;
+      }
+
       var file = new File([blob], "KiranaBill.png", { type: "image/png" });
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: "Bill - " + shopName });
           showToast("Shared! \u2713", "ok");
+          resolve();
           return;
-        } catch (error) {}
+        } catch (error) {
+          if (error && error.name === "AbortError") {
+            resolve();
+            return;
+          }
+        }
       }
 
-      var message = "*" + shopName + "*\n";
-      if (shopPhone) {
-        message += "\uD83D\uDCDE " + shopPhone + "\n";
+      var encodedMessage = encodeURIComponent(message);
+      if (isMobileDevice()) {
+        window.location.href = "whatsapp://send?text=" + encodedMessage;
+      } else {
+        window.open("https://wa.me/?text=" + encodedMessage, "_blank", "noopener");
       }
-      message += "\uD83D\uDCC5 " + new Date().toLocaleDateString("en-IN") + "\n" + "\u2500".repeat(22) + "\n";
-      billItems.forEach(function(item) {
-        message += item.displayName + "  " + item.qty + item.unit + "  \u20B9" + item.total.toFixed(0) + "\n";
-      });
-      message += "\u2500".repeat(22) + "\n*Total: \u20B9" + getTotal().toFixed(0) + "*\n_\u0927\u0928\u094D\u092F\u0935\u093E\u0926 \uD83D\uDE4F_";
-
-      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank");
       showToast("WhatsApp khul raha hai...", "ok");
+      resolve();
     }, "image/png");
-  } catch (error) {
-    showToast("Share failed", "err");
-  }
+  });
 }
 
 function openSMSSheet() {
@@ -865,34 +948,17 @@ async function shareHistWA() {
   try {
     showToast("Preparing...", "info");
     var canvas = await renderOffscreen(buildBillHTML(currentHistBill.items, currentHistBill.customer));
-
-    canvas.toBlob(async function(blob) {
-      var file = new File([blob], "KiranaBill.png", { type: "image/png" });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "KiranaBill" });
-          showToast("Shared! \u2713", "ok");
-          return;
-        } catch (error) {}
-      }
-
-      var message = "*" + shopName + "*\n";
-      if (shopPhone) {
-        message += "\uD83D\uDCDE " + shopPhone + "\n";
-      }
-      if (currentHistBill.customer) {
-        message += "\uD83D\uDC64 " + currentHistBill.customer + "\n";
-      }
-      message += "\uD83D\uDCC5 " + new Date(currentHistBill.ts).toLocaleDateString("en-IN") + "\n" + "\u2500".repeat(22) + "\n";
-      currentHistBill.items.forEach(function(item) {
-        message += item.displayName + "  " + item.qty + item.unit + "  \u20B9" + item.total.toFixed(0) + "\n";
-      });
-      message += "\u2500".repeat(22) + "\n*Total: \u20B9" + currentHistBill.total.toFixed(0) + "*\n_\u0927\u0928\u094D\u092F\u0935\u093E\u0926 \uD83D\uDE4F_";
-
-      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank");
-      showToast("WhatsApp khul raha hai...", "ok");
-    }, "image/png");
+    await shareCanvasOnWhatsApp(
+      canvas,
+      buildWhatsAppText(
+        currentHistBill.items,
+        currentHistBill.total,
+        currentHistBill.customer,
+        currentHistBill.ts
+      )
+    );
   } catch (error) {
+    console.error(error);
     showToast("Failed", "err");
   }
 }

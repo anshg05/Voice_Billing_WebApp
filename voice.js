@@ -293,24 +293,46 @@ async function parseWithGemini(text) {
     + "Units: kilo/kg, gram/gm/g, liter/litre/l, ml, piece/pcs, packet/pack/pkt, dozen, box, bottle, pouch, bag\n\n"
     + "Speech: \"" + text + "\"\n\n"
     + "=== CRITICAL PRICING RULES ===\n\n"
-    + "RULE 1 - TOTAL vs RATE:\n"
-    + "When a user says a price WITH a quantity, the price is the TOTAL, NOT rate per unit.\n"
+    + "RULE 1 - WALA MEANS PER-UNIT RATE:\n"
+    + "If a user says 'X wala', 'X rupay wala', or 'Rs X wala', X is the PER-UNIT RATE, not total.\n"
+    + "This applies to kg/gm/liter/ml items as well as piece items.\n"
+    + "This is a GENERAL rule for any numeric value, not only the examples below. 1 wala, 7 wala, 30 wala, 83 wala, 180 wala, 999 wala all mean per-unit rate.\n"
+    + "- \"gehun 5 kg 30 rupay wala\" means qty:5, unit:kg, rate:30, total:150\n"
+    + "- \"chawal 50 wala 5kg\" means qty:5, unit:kg, rate:50, total:250\n"
+    + "- \"toor daal 2 kilo 100 wala\" means qty:2, unit:kg, rate:100, total:200\n"
+    + "- \"teen Parle-G 10 wala\" means qty:3, unit:piece, rate:10, total:30\n\n"
+    + "RULE 2 - KA MEANS TOTAL PRICE:\n"
+    + "If a user says 'X ka' or 'X rupay ka', X is the TOTAL price for that line item, not rate.\n"
+    + "This is a GENERAL rule for any numeric value, not only the examples below. 5 ka, 30 ka, 111 ka, 250 ka all mean total price.\n"
+    + "- \"chawal 5kg 30 ka\" means qty:5, unit:kg, rate:null, total:30\n"
+    + "- \"ajwain 10 ka\" means qty:1, unit:gm, rate:null, total:10\n"
+    + "- \"namak 20 rupay ka\" means qty:1, unit:kg, rate:null, total:20\n\n"
+    + "RULE 3 - PRICE WITHOUT WALA OR KA:\n"
+    + "When a user says a price with quantity but does NOT say 'wala', treat that spoken price as TOTAL, not rate.\n"
     + "- \"5 kg aata 170 rupay\" means qty:5, unit:kg, rate:null, total:170\n"
     + "- \"50 gram jeera 20 rupay\" means qty:50, unit:gm, rate:null, total:20\n"
     + "- \"ajwain 10 rupay\" means qty:1, unit:gm, rate:null, total:10\n"
     + "- \"2 kilo chini 90 rupay\" means qty:2, unit:kg, rate:null, total:90\n"
     + "- \"namak 20 rupay\" means qty:1, unit:kg, rate:null, total:20\n\n"
-    + "RULE 2 - WALA = per-unit RATE:\n"
-    + "\"X wala\" means X is the rate per piece.\n"
-    + "- \"teen Parle-G 10 wala\" means qty:3, unit:piece, rate:10, total:30\n"
-    + "- \"30 wala biscuit 2\" means qty:2, unit:piece, rate:30, total:60\n\n"
-    + "RULE 3 - No price mentioned: Set rate to defaultPrice, total = qty * defaultPrice.\n\n"
-    + "RULE 4 - Small amounts are TOTAL: \"10 rupay ka ajwain\" - the 10 is total, not rate.\n\n"
+    + "RULE 4 - DISTINCT VARIANTS BY PRICE:\n"
+    + "If the same base product is spoken again with a different explicit rate or a different explicit total, it is a DIFFERENT line item and must NOT be merged.\n"
+    + "This rule applies to ALL products, not only chawal. Examples: chawal, gehun, sabun, toor daal, namak, chini, oil, biscuit, anything.\n"
+    + "For any product with an explicit spoken rate or explicit spoken total, include the price marker in displayName to keep them separate.\n"
+    + "Do NOT assume the price numbers are fixed. The spoken numeric value can be ANY number and must be preserved.\n"
+    + "- \"chawal 50 wala 5kg\" => displayName:\"Chawal (50/kg)\"\n"
+    + "- \"chawal 60 wala 5kg\" => displayName:\"Chawal (60/kg)\"\n"
+    + "- \"chawal 30 ka\" => displayName:\"Chawal (Rs30 total)\"\n"
+    + "- \"sabun 30 rupay\" => displayName:\"Sabun (Rs30 total)\"\n"
+    + "- \"sabun 180 rupay\" => displayName:\"Sabun (Rs180 total)\"\n"
+    + "- \"toor daal 100 wala\" => displayName:\"Toor Daal (100/kg)\"\n"
+    + "If two rows have different explicit rates or totals, return them as separate array entries.\n\n"
+    + "RULE 5 - No price mentioned: Set rate to defaultPrice, total = qty * defaultPrice.\n\n"
     + "Return ONLY a valid JSON array. No markdown, no extra text.\n"
-    + "Format: [{\"displayName\":\"Chini\",\"qty\":2,\"unit\":\"kg\",\"rate\":null,\"total\":90,\"isCustom\":false}]\n"
+    + "Format: [{\"displayName\":\"Chini\",\"qty\":2,\"unit\":\"kg\",\"rate\":null,\"total\":90,\"isCustom\":false,\"priceType\":\"total\"}]\n"
     + "- rate: number if per-unit price, null if price was spoken as total\n"
     + "- total: always a number\n"
     + "- isCustom: true for unknown products\n"
+    + "- priceType: 'rate' if spoken with wala, 'total' if spoken with ka or explicit total price, 'default' if no spoken price and default catalog price was used\n"
     + "- Ignore fillers: aur, bhi, ruk, haan, ok, bhai, please";
 
   try {
@@ -333,13 +355,33 @@ async function parseWithGemini(text) {
       throw new Error((data && data.error) || "Parser service failed");
     }
 
-    return data;
+    return normalizeParsedItems(data);
   } catch (error) {
     showParsing(false);
     console.error(error);
     showToast("Parsing failed: " + (error && error.message ? error.message : "Gemini error"), "err");
     return [];
   }
+}
+
+function appendPriceMarker(displayName, suffix) {
+  var baseName = String(displayName || "").replace(/\s*\((?:Rs)?[^)]*\)\s*$/i, "").trim();
+  return suffix ? baseName + " (" + suffix + ")" : baseName;
+}
+
+function normalizeParsedItems(items) {
+  return (items || []).map(function(item) {
+    var normalizedItem = Object.assign({}, item);
+    var priceType = normalizedItem.priceType;
+
+    if (priceType === "rate" && normalizedItem.rate !== null && normalizedItem.rate !== undefined) {
+      normalizedItem.displayName = appendPriceMarker(normalizedItem.displayName, normalizedItem.rate + "/" + normalizedItem.unit);
+    } else if (priceType === "total" && normalizedItem.total !== null && normalizedItem.total !== undefined) {
+      normalizedItem.displayName = appendPriceMarker(normalizedItem.displayName, "Rs" + normalizedItem.total + " total");
+    }
+
+    return normalizedItem;
+  });
 }
 
 async function processVoice(text) {
