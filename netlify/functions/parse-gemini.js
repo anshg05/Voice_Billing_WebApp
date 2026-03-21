@@ -1,8 +1,20 @@
+var CORS_HEADERS = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type"
+};
+
 exports.handler = async function(event) {
+  // Handle CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers: CORS_HEADERS, body: "" };
+  }
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: CORS_HEADERS,
       body: JSON.stringify({ error: "Method Not Allowed" })
     };
   }
@@ -10,7 +22,7 @@ exports.handler = async function(event) {
   if (!process.env.GEMINI_API_KEY) {
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: CORS_HEADERS,
       body: JSON.stringify({ error: "Missing GEMINI_API_KEY in Netlify environment variables" })
     };
   }
@@ -22,7 +34,7 @@ exports.handler = async function(event) {
     if (!prompt) {
       return {
         statusCode: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: CORS_HEADERS,
         body: JSON.stringify({ error: "Prompt is required" })
       };
     }
@@ -48,6 +60,7 @@ exports.handler = async function(event) {
     });
 
     var data = await response.json();
+
     if (!response.ok || data.error) {
       throw new Error((data && data.error && data.error.message) || "Gemini request failed");
     }
@@ -63,13 +76,14 @@ exports.handler = async function(event) {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: CORS_HEADERS,
       body: JSON.stringify(parsedItems)
     };
+
   } catch (error) {
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: CORS_HEADERS,
       body: JSON.stringify({
         error: error && error.message ? error.message : "Failed to parse with Gemini"
       })
